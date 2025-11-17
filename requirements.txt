@@ -1,0 +1,13 @@
+pytorch
+torch==2.1.2
+torchvision==0.16.2
+torchaudio==0.16.2
+numpy
+opencv-python
+Pillow
+albumentations
+matplotlib
+scikit-learn
+pandas
+seaborn
+tqdm

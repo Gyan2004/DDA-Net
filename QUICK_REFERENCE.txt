@@ -1,0 +1,178 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                   KVASIR-SEG MEDICAL IMAGE SEGMENTATION                       ║
+║                      QUICK REFERENCE CARD                                     ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌─ INSTALLATION ────────────────────────────────────────────────────────────────┐
+│                                                                               │
+│  pip install -r requirements.txt                                            │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ THREE WAYS TO START ─────────────────────────────────────────────────────────┐
+│                                                                               │
+│  1. QUICK TEST (5 epochs, 10 min):                                          │
+│     python quick_demo.py                                                     │
+│                                                                               │
+│  2. FULL TRAINING (100 epochs, 6-8 hours):                                  │
+│     python train.py --epochs 100 --batch-size 8 --model all                │
+│                                                                               │
+│  3. SINGLE MODEL (100 epochs):                                              │
+│     python train.py --model ddanet --epochs 100                             │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ MODELS ──────────────────────────────────────────────────────────────────────┐
+│                                                                               │
+│  U-Net           31.4M params  |  Fast   |  Dice: 0.85-0.87                 │
+│  DoubleU-Net     62.8M params  |  Slow   |  Dice: 0.86-0.88                 │
+│  DDANet          33.5M params  |  Medium |  Dice: 0.87-0.89 ⭐             │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TRAINING OPTIONS ────────────────────────────────────────────────────────────┐
+│                                                                               │
+│  --model     unet|doubleunet|ddanet|all (default: all)                       │
+│  --epochs    Number of epochs (default: 100)                                 │
+│  --batch-size Batch size (default: 8)                                        │
+│  --lr        Learning rate (default: 1e-3)                                   │
+│  --loss      bce|dice|bce_dice|focal_tversky (default: bce_dice)            │
+│                                                                               │
+│  Examples:                                                                    │
+│  python train.py --model unet --epochs 50                                   │
+│  python train.py --loss focal_tversky --epochs 100                          │
+│  python train.py --batch-size 4 --lr 5e-4                                   │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ AFTER TRAINING ──────────────────────────────────────────────────────────────┐
+│                                                                               │
+│  python evaluate_models.py                                                   │
+│                                                                               │
+│  Generates:                                                                   │
+│  ✓ results/comparison.csv       (metrics table)                             │
+│  ✓ results/comparison.png       (visualization)                             │
+│  ✓ results/*_predictions.png    (sample outputs)                            │
+│  ✓ results/*_history.png        (training curves)                           │
+│  ✓ checkpoints/*_best.pth       (saved models)                              │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ LOSS FUNCTIONS ──────────────────────────────────────────────────────────────┐
+│                                                                               │
+│  BCE          Binary Cross-Entropy (pixel-wise)                              │
+│  Dice         Overlap-based metric                                            │
+│  BCE + Dice   Combined (recommended) ⭐                                      │
+│  Focal Tversky For class imbalance                                           │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ EVALUATION METRICS ──────────────────────────────────────────────────────────┐
+│                                                                               │
+│  Dice      2 × TP / (2TP + FP + FN)        Overlap (0-1, higher=better)    │
+│  IoU        TP / (TP + FP + FN)            Jaccard index                    │
+│  Accuracy   (TP + TN) / Total              Pixel-wise accuracy              │
+│  Precision  TP / (TP + FP)                 Positive predictions             │
+│  Recall     TP / (TP + FN)                 True positive rate               │
+│                                                                               │
+│  Where: TP=true positives, FP=false positives, FN=false negatives          │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ RECOMMENDED HYPERPARAMETERS ─────────────────────────────────────────────────┐
+│                                                                               │
+│  Image Size        352×352                  (Kvasir-SEG standard)            │
+│  Batch Size        8-16                     (adjust for GPU memory)          │
+│  Learning Rate     1e-3                     (with ReduceLROnPlateau)         │
+│  Optimizer         Adam                     (default)                        │
+│  Loss Function     BCE + Dice               (best balance)                   │
+│  Epochs            100                      (early stop ~80-90)              │
+│  Train/Val Split   80/20                    (standard)                       │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TROUBLESHOOTING ─────────────────────────────────────────────────────────────┐
+│                                                                               │
+│  Out of Memory:      python train.py --batch-size 4 --model unet            │
+│  Loss Not Decreasing: python train.py --lr 5e-4 --loss dice                │
+│  Slow Training:      python train.py --batch-size 16 --model unet          │
+│  Check Checkpoints:  ls -lh checkpoints/                                   │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ DATA AUGMENTATION ───────────────────────────────────────────────────────────┐
+│                                                                               │
+│  Training (Strong):                      Validation (Minimal):              │
+│  • Horizontal flip (p=0.5)                • Resizing only                    │
+│  • Vertical flip (p=0.5)                  • ImageNet normalization           │
+│  • Rotation ±45° (p=0.5)                                                    │
+│  • CLAHE (p=0.3)                                                             │
+│  • Gaussian noise (p=0.3)                                                    │
+│  • Random brightness/contrast (p=0.3)                                        │
+│  • Elastic transforms (p=0.3)                                                │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ OUTPUT DIRECTORY STRUCTURE ──────────────────────────────────────────────────┐
+│                                                                               │
+│  After Training:                        After Evaluation:                   │
+│  checkpoints/                           results/                            │
+│  ├── unet_best.pth                      ├── comparison.csv                  │
+│  ├── unet_epoch_*.pth                   ├── comparison.png                  │
+│  ├── doubleunet_best.pth                ├── unet_predictions.png            │
+│  ├── ddanet_best.pth                    ├── unet_history.png                │
+│  └── ...                                └── ...                             │
+│                                                                               │
+│  history_*.json (training statistics)                                        │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ EXPECTED RESULTS (100 epochs on Kvasir-SEG) ─────────────────────────────────┐
+│                                                                               │
+│  U-Net:           Dice: 0.85-0.87  |  IoU: 0.78-0.81  |  ~2 hours          │
+│  DoubleU-Net:     Dice: 0.86-0.88  |  IoU: 0.79-0.82  |  ~3 hours          │
+│  DDANet ⭐:       Dice: 0.87-0.89  |  IoU: 0.80-0.83  |  ~2.5 hours         │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ FILE GUIDE ──────────────────────────────────────────────────────────────────┐
+│                                                                               │
+│  train.py              Main training script (all models & losses)            │
+│  evaluate_models.py    Evaluation, metrics, plots, comparisons              │
+│  quick_demo.py         5-epoch demo for validation                          │
+│  test_pipeline.py      Dataset & model verification                         │
+│  requirements.txt      Dependencies                                         │
+│                                                                               │
+│  GETTING_STARTED.txt   Detailed setup guide (this format)                   │
+│  README_SETUP.md       Setup examples & advanced usage                      │
+│  COMPLETE_PIPELINE.md  Full API reference & architecture details            │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+┌─ QUICK COMMANDS ──────────────────────────────────────────────────────────────┐
+│                                                                               │
+│  # Verify setup (< 5 min)                                                   │
+│  python quick_demo.py                                                        │
+│                                                                               │
+│  # Train all models (6-8 hours)                                             │
+│  python train.py --epochs 100 --batch-size 8 --model all                  │
+│                                                                               │
+│  # Train DDANet only (recommended, ~2.5 hours)                             │
+│  python train.py --model ddanet --epochs 100                               │
+│                                                                               │
+│  # Evaluate and compare                                                      │
+│  python evaluate_models.py                                                   │
+│                                                                               │
+│  # View results                                                              │
+│  ls results/                                                                 │
+│  cat results/comparison.csv                                                  │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+
+═════════════════════════════════════════════════════════════════════════════════
+
+Ready? Start with: python quick_demo.py
+
+Questions? Check: README_SETUP.md or COMPLETE_PIPELINE.md
+
+═════════════════════════════════════════════════════════════════════════════════
