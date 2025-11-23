@@ -13,9 +13,9 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Import from train.py
-from train import (
-    KvasirSegDataset, SegmentationMetrics, UNet, DoubleUNet, DDANet, AttentionUNet
-)
+from train import KvasirSegDataset, SegmentationMetrics
+# Import models from separate modules
+from models import UNet, DoubleUNet, DDANet
 
 # ============================================================================
 # 1. COMPREHENSIVE EVALUATION
